@@ -1,0 +1,5 @@
+
+*  docker-org-rfc
+A docker container that includes everything needed to author RFCs using org-rfc.
+  This is especially useful for YANG module authors as it enables automatic
+  generation of YANG tree and validation of the YANG module and examples.
