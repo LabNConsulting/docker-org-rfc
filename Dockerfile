@@ -5,6 +5,7 @@ RUN apt-get update && \
         apt-get install -y \
             build-essential \
             curl \
+            git \
             gnutls-bin \
             gnutls-dev \
             jing \
@@ -21,7 +22,7 @@ RUN apt-get update && \
             xsltproc \
             yang-tools \
         && \
-        pip install pyang xml2rfc
+        pip install pyang xml2rfc==2.22.3
 
 ENV SHELL=/bin/bash
 ARG EVERSION=26.3
@@ -37,16 +38,11 @@ RUN mkdir -p /tmp/org-${ORG_RELEASE} && \
         curl -fL --silent https://code.orgmode.org/bzg/org-mode/archive/release_${ORG_RELEASE}.tar.gz | tar --strip-components=1 -xzf - && \
         make autoloads lisp)
 
-RUN apt-get install -y subversion
-
-RUN mkdir -p /yang && \
-        svn co https://github.com/YangModels/yang.git/trunk/standard/ietf/RFC yang-tmp && \
-        mv yang-tmp/*.yang /yang && \
-        rm -rf yang-tmp && \
-        svn co https://github.com/YangModels/yang.git/trunk/experimental/ietf-extracted-YANG-modules yang-tmp && \
-        mv yang-tmp/*.yang /yang && \
-        rm -rf yang-tmp
+RUN mkdir -p /yang && mkdir -p /work && \
+        git clone https://github.com/YangModels/yang.git /yang-git
+RUN find /yang-git -type f -name '*.yang' ! -path '*vendor*' -exec cp -f -t /yang {} \;
 
 ENV YANG_MODPATH=/yang
-WORKDIR /
+VOLUME /work
+WORKDIR /work
 CMD [ "bash" ]
