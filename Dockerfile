@@ -1,48 +1,40 @@
 # -*- Dockerfile -*-
-FROM ubuntu:19.10
-RUN apt-get update && \
-        apt-get upgrade -y && \
-        apt-get install -y \
-            build-essential \
-            curl \
-            git \
-            gnutls-bin \
-            gnutls-dev \
-            jing \
-            libncurses-dev \
-            libxml2 \
-            libxml2-dev \
-            libxml2-utils \
-            libxslt-dev \
-            python-dev \
-            python-pip \
-            subversion \
-            tidy \
-            wget \
-            xsltproc \
-            yang-tools \
-        && \
-        pip install pyang xml2rfc==2.22.3
-
-ENV SHELL=/bin/bash
-ARG EVERSION=26.3
-RUN curl -O http://ftp.gnu.org/gnu/emacs/emacs-$EVERSION.tar.gz && \
-        tar xf emacs-$EVERSION.tar.gz
-
-WORKDIR emacs-$EVERSION
-RUN env CANNOT_DUMP=yes ./configure --with-gnutls=no && make && make install
+FROM alpine:3.10
 
 ARG ORG_RELEASE=9.2.2
-RUN mkdir -p /tmp/org-${ORG_RELEASE} && \
-        (cd /tmp/org-${ORG_RELEASE} && \
-        curl -fL --silent https://code.orgmode.org/bzg/org-mode/archive/release_${ORG_RELEASE}.tar.gz | tar --strip-components=1 -xzf - && \
-        make autoloads lisp)
 
-RUN mkdir -p /yang && mkdir -p /work && \
-        git clone https://github.com/YangModels/yang.git /yang-git
-RUN find /yang-git -type f -name '*.yang' ! -path '*vendor*' -exec cp -f -t /yang {} \;
+RUN apk --update add --no-cache \
+        bash \
+        curl \
+        emacs \
+        gnutls \
+        git \
+        libxml2-utils \
+        libxslt \
+        ncurses \
+        python3 \
+        py3-pip \
+        py3-lxml \
+        tidyhtml && \
+    apk --update add --no-cache libyang --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing && \
+        pip3 install --no-cache-dir -U pip && \
+        pip3 install --no-cache-dir pyang xml2rfc==2.22.3 && \
+    apk --update add --virtual build-dependencies make && \
+    # Add newer org mode.
+    mkdir -p /tmp/org-${ORG_RELEASE} && \
+    (cd /tmp/org-${ORG_RELEASE} && \
+    curl -fL --silent https://code.orgmode.org/bzg/org-mode/archive/release_${ORG_RELEASE}.tar.gz | tar --strip-components=1 -xzf - && \
+    make autoloads lisp) && \
+    # Add yang models
+    mkdir -p /yang /yang-drafts /yang-git /work && \
+    (cd /yang-git && curl -L https://github.com/YangModels/yang/tarball/master | tar --strip 1 -xzf -) && \
+    find /yang-git/standard -name '*.yang' ! -path '*vendor*' -exec mv {} /yang \; && \
+    find /yang-git/experimental -name '*.yang' ! -path '*vendor*' -exec mv {} /yang-drafts \; && \
+    rm -rf /yang-git && \
+    # Remove unneeded packages.
+    apk del build-dependencies
 
-ENV YANG_MODPATH=/yang
+ENV YANG_MODPATH=/yang:/yang-drafts
 VOLUME /work
 WORKDIR /work
 CMD [ "bash" ]
