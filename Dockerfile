@@ -11,6 +11,7 @@ RUN apk --update add --no-cache \
         git \
         libxml2-utils \
         libxslt \
+        make \
         ncurses \
         python3 \
         py3-pip \
@@ -19,7 +20,6 @@ RUN apk --update add --no-cache \
     apk --update add --no-cache libyang --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing && \
         pip3 install --no-cache-dir -U pip && \
         pip3 install --no-cache-dir pyang xml2rfc==2.22.3 && \
-    apk --update add --virtual build-dependencies make && \
     # Add newer org mode.
     mkdir -p /tmp/org-${ORG_RELEASE} && \
     (cd /tmp/org-${ORG_RELEASE} && \
@@ -30,9 +30,7 @@ RUN apk --update add --no-cache \
     (cd /yang-git && curl -L https://github.com/YangModels/yang/tarball/master | tar --strip 1 -xzf -) && \
     find /yang-git/standard -name '*.yang' ! -path '*vendor*' -exec mv {} /yang \; && \
     find /yang-git/experimental -name '*.yang' ! -path '*vendor*' -exec mv {} /yang-drafts \; && \
-    rm -rf /yang-git && \
-    # Remove unneeded packages.
-    apk del build-dependencies
+    rm -rf /yang-git
 
 ENV YANG_MODPATH=/yang:/yang-drafts
 VOLUME /work
