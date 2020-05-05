@@ -3,7 +3,9 @@ FROM alpine:3.10
 
 ARG ORG_RELEASE=9.2.2
 
-RUN apk --update add --no-cache \
+RUN sed -i -e 's/v[[:digit:]]\..*\//edge\//g' /etc/apk/repositories && \
+    apk upgrade --update-cache --available && \
+    apk --update add --no-cache \
         bash \
         curl \
         emacs \
@@ -11,13 +13,13 @@ RUN apk --update add --no-cache \
         git \
         libxml2-utils \
         libxslt \
+        libyang \
         make \
         ncurses \
         python3 \
         py3-pip \
         py3-lxml \
         tidyhtml && \
-    apk --update add --no-cache libyang --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing && \
         pip3 install --no-cache-dir -U pip && \
         pip3 install --no-cache-dir pyang xml2rfc==2.22.3 && \
     # Add newer org mode.
