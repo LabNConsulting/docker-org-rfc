@@ -21,7 +21,7 @@ RUN sed -i -e 's/v[[:digit:]]\..*\//edge\//g' /etc/apk/repositories && \
         py3-lxml \
         tidyhtml && \
         pip3 install --no-cache-dir -U pip && \
-        pip3 install --no-cache-dir pyang xml2rfc==2.22.3 && \
+        pip3 install --no-cache-dir pyang xml2rfc==2.44.0 && \
     # Add newer org mode.
     mkdir -p /tmp/org-${ORG_RELEASE} && \
     (cd /tmp/org-${ORG_RELEASE} && \
